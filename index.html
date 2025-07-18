@@ -52,7 +52,7 @@
 </head>
 <body>
   <h1 style="text-align: center; padding: 16px;">🐶 Projeto Guinho</h1>
-  <div class="container" id="news-container"></div>
+  <div class="container" id="news-container">Carregando notícias...</div>
 
   <script>
     const feeds = [
@@ -63,16 +63,36 @@
       { site: 'Blog do iPhone', url: 'https://api.rss2json.com/v1/api.json?rss_url=https://blogdoiphone.com/feed/' }
     ];
 
+    function extractImageFromContent(html) {
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      const img = div.querySelector('img');
+      return img ? img.src : 'https://via.placeholder.com/600x300?text=Not%C3%ADcia';
+    }
+
     async function loadFeed(feed) {
+      const cacheKey = 'feed_' + feed.site;
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        return JSON.parse(cached);
+      }
+
       const response = await fetch(feed.url);
       const data = await response.json();
       const item = data.items[0];
-      return {
+      const image = item.thumbnail || extractImageFromContent(item.content || item.description || '');
+
+      const result = {
         title: item.title,
         link: item.link,
-        image: item.thumbnail || 'https://via.placeholder.com/600x300?text=Notícia',
+        image: image,
         site: feed.site
       };
+
+      localStorage.setItem(cacheKey, JSON.stringify(result));
+      setTimeout(() => localStorage.removeItem(cacheKey), 5 * 60 * 1000); // limpa após 5 min
+
+      return result;
     }
 
     async function renderNews() {
