@@ -1,8 +1,9 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Projeto Guinho</title>
   <link rel="icon" href="favicon.png" type="image/png">
   <style>
@@ -55,27 +56,22 @@
 
   <script>
     const feeds = [
-      { site: 'Globo', url: 'https://g1.globo.com/rss/g1/' },
-      { site: 'UOL', url: 'https://noticias.uol.com.br/ultimas/index.xml' },
-      { site: 'MacMagazine', url: 'https://macmagazine.com.br/feed/' },
-      { site: 'Blog do iPhone', url: 'https://blogdoiphone.com/feed/' },
-      { site: 'TudoCelular', url: 'https://www.tudocelular.com/feed/' },
-      { site: 'Olhar Direto', url: 'https://olhardireto.com.br/rss' },
-      { site: 'MidiaNews', url: 'https://www.midianews.com.br/rss.php' },
-      { site: 'RDNews', url: 'https://www.rdnews.com.br/rss' }
+      { site: 'TudoCelular', url: 'https://api.rss2json.com/v1/api.json?rss_url=https://www.tudocelular.com/feed/' },
+      { site: 'MidiaNews', url: 'https://api.rss2json.com/v1/api.json?rss_url=https://www.midianews.com.br/rss.php' },
+      { site: 'RDNews', url: 'https://api.rss2json.com/v1/api.json?rss_url=https://www.rdnews.com.br/rss' },
+      { site: 'MacMagazine', url: 'https://api.rss2json.com/v1/api.json?rss_url=https://macmagazine.com.br/feed/' },
+      { site: 'Blog do iPhone', url: 'https://api.rss2json.com/v1/api.json?rss_url=https://blogdoiphone.com/feed/' }
     ];
 
-    async function loadFeed(url) {
-      const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
-      const response = await fetch(proxyUrl);
+    async function loadFeed(feed) {
+      const response = await fetch(feed.url);
       const data = await response.json();
-      const parser = new DOMParser();
-      const xml = parser.parseFromString(data.contents, "text/xml");
-      const item = xml.querySelector("item");
+      const item = data.items[0];
       return {
-        title: item.querySelector("title").textContent,
-        link: item.querySelector("link").textContent,
-        image: item.querySelector("enclosure")?.getAttribute("url") || 'https://via.placeholder.com/600x300?text=Not%C3%ADcia'
+        title: item.title,
+        link: item.link,
+        image: item.thumbnail || 'https://via.placeholder.com/600x300?text=Notícia',
+        site: feed.site
       };
     }
 
@@ -84,13 +80,13 @@
       container.innerHTML = '';
       for (const feed of feeds) {
         try {
-          const news = await loadFeed(feed.url);
+          const news = await loadFeed(feed);
           const div = document.createElement('div');
           div.className = 'banner';
           div.innerHTML = `
             <img src="${news.image}" alt="Imagem">
             <div class="banner-content">
-              <h3>${feed.site}</h3>
+              <h3>${news.site}</h3>
               <p><a href="${news.link}" target="_blank">${news.title}</a></p>
             </div>
           `;
@@ -102,7 +98,7 @@
     }
 
     renderNews();
-    setInterval(renderNews, 10 * 60 * 1000); // Atualiza a cada 10 minutos
+    setInterval(renderNews, 10 * 60 * 1000);
   </script>
 </body>
 </html>
